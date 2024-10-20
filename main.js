@@ -1,6 +1,7 @@
 const { program } = require('commander');
 const http = require('http');
 const fs = require('node:fs');
+const agent = require('superagent');
 program
     .option('-h, --host <address>', 'Server address')
     .option('-p, --port <number>', 'Server port')
@@ -21,9 +22,8 @@ if (!opts.host) {
 }
 
 const server = http.createServer((req, res) => {
-    //console.log(req.method + ' ' + req.url);
     if (req.method === "GET") {
-        let picture = opts.cache + req.url + '.jpg';
+        const picture = opts.cache + req.url + '.jpg';
         fs.promises.readFile(picture)
             .then(readPicture => {
                 res.setHeader('Content-Type', 'image/jpeg');
@@ -35,9 +35,14 @@ const server = http.createServer((req, res) => {
                 res.end('Picture has not found');
             });
     } else if (req.method === "PUT") {
-
+       
     } else if (req.method === "DELETE") {
-
+        const picture = opts.cache + req.url + '.jpg';
+        fs.promises.rm(picture, {
+            force : true
+        });
+        res.writeHead(200);
+        res.end();
     } else {
         res.writeHead(405);
         res.end();
