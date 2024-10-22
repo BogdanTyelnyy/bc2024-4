@@ -20,6 +20,13 @@ if (!opts.host) {
     console.error('Error: input cache');
     return;
 }
+fs.mkdir(opts.cache, {
+    recursive : true
+}, err => {
+    if (err) {
+        console.log(err);
+    }
+});
 
 const server = http.createServer((req, res) => {
     //console.log(req.method + " " + req.url);
@@ -33,31 +40,35 @@ const server = http.createServer((req, res) => {
                 res.end(readPicture);
             })
             .catch(error => {
-                superagent
-                    .put(`http://${opts.host}:${opts.port}${req.url}`)
-                    .catch(error => {});
-                res.writeHead(404);
-                res.end('Picture has not found');
+                superagent.get(pictureUrl, (error, responce) => {
+                    if(error) {
+                        res.writeHead(404);
+                        res.end('Eror 404\nPicture does not exist :`(');
+                    } else {
+                        fs.promises.writeFile(pictureFile, responce.body);
+                        res.setHeader('Content-Type', 'image/jpeg');
+                        res.writeHead(200);
+                        res.end(responce.body);
+                    }
+                });
             });
     } else if (req.method === "PUT") {
-        superagent.get(pictureUrl)
-            .then(picture => {
-                fs.promises.writeFile(pictureFile, picture.body);
-                res.writeHead(201);
-                res.end();
-            })
-            .catch(error => {
+        superagent.get(pictureUrl, (error, responce) => {
+            if(error) {
                 res.writeHead(404);
                 res.end();
-            });
-        return;
+            } else {
+                fs.promises.writeFile(pictureFile, responce.body);
+                res.writeHead(201);
+                res.end();
+            }
+        });
     } else if (req.method === "DELETE") {
         fs.promises.rm(pictureFile, {
             force : true
         });
         res.writeHead(200);
         res.end();
-        return;
     } else {
         res.writeHead(405);
         res.end();
