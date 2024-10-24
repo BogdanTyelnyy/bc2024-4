@@ -53,16 +53,23 @@ const server = http.createServer((req, res) => {
                 });
             });
     } else if (req.method === "PUT") {
-        superagent.get(pictureUrl, (error, responce) => {
-            if(error) {
-                res.writeHead(404);
-                res.end();
-            } else {
-                fs.promises.writeFile(pictureFile, responce.body);
-                res.writeHead(201);
-                res.end();
-            }
+        let pictureFile = [];
+        req.on('data', chunk => {
+            pictureFile.push(chunk);
         });
+        req.on('end', () => {
+            const oldPicturePath = opts.cache + req.url + ".jpg";
+            const buffer = Buffer.concat(pictureFile);
+            fs.promises.writeFile(oldPicturePath, buffer)
+                .then(() => {
+                    res.writeHead(201);
+                    res.end();
+                })
+                .catch(error => {
+                    res.writeHead(404);
+                    res.end();
+                });
+            });
     } else if (req.method === "DELETE") {
         fs.promises.rm(pictureFile, {
             force : true
