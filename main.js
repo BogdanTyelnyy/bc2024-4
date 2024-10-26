@@ -31,9 +31,9 @@ fs.mkdir(opts.cache, {
 const server = http.createServer((req, res) => {
     //console.log(req.method + " " + req.url);
     const pictureUrl = "https://http.cat" + req.url + ".jpg";
-    const pictureFile = opts.cache + req.url + '.jpg';
+    const picturePath = opts.cache + req.url + '.jpg';
     if (req.method === "GET") {
-        fs.promises.readFile(pictureFile)
+        fs.promises.readFile(picturePath)
             .then(readPicture => {
                 res.setHeader('Content-Type', 'image/jpeg');
                 res.writeHead(200);
@@ -45,7 +45,7 @@ const server = http.createServer((req, res) => {
                         res.writeHead(404);
                         res.end('Eror 404\nPicture does not exist :`(');
                     } else {
-                        fs.promises.writeFile(pictureFile, responce.body);
+                        fs.promises.writeFile(picturePath, responce.body);
                         res.setHeader('Content-Type', 'image/jpeg');
                         res.writeHead(200);
                         res.end(responce.body);
@@ -54,13 +54,12 @@ const server = http.createServer((req, res) => {
             });
     } else if (req.method === "PUT") {
         let pictureFile = [];
-        req.on('data', chunk => {
-            pictureFile.push(chunk);
+        req.on('data', part => {
+            pictureFile.push(part);
         });
         req.on('end', () => {
-            const oldPicturePath = opts.cache + req.url + ".jpg";
             const buffer = Buffer.concat(pictureFile);
-            fs.promises.writeFile(oldPicturePath, buffer)
+            fs.promises.writeFile(picturePath, buffer)
                 .then(() => {
                     res.writeHead(201);
                     res.end();
