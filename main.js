@@ -70,7 +70,7 @@ const server = http.createServer((req, res) => {
                 });
             });
     } else if (req.method === "DELETE") {
-        fs.promises.rm(pictureFile, {
+        fs.promises.rm(picturePath, {
             force : true
         });
         res.writeHead(200);
